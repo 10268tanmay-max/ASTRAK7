@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MINATO AMAMIYA - Astro Trainer</title>
+<link rel="icon" type="image/svg+xml" href="../assets/academy-logo.svg?v=astro-badge-2" />
+<link rel="stylesheet" href="css/style.css?v=academy-intro-5" />
+</head>
+<body>
+<div id="app">
+  <video id="dashboard-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+    <source src="assets/dashboard-bg-optimized.m4v?v=20261113-3" type="video/mp4" />
+  </video>
+  <canvas id="game"></canvas>
+  <video id="intro-cinematic" class="intro-cinematic" autoplay muted playsinline preload="auto" aria-hidden="true">
+    <source src="../assets/intro-cinematic.mp4?v=20261114" type="video/mp4" />
+  </video>
+  <div class="music-controls">
+    <label class="sr-only" for="music-track">Music playlist</label>
+    <select id="music-track" class="music-track" aria-label="Music playlist">
+      <option value="space-galaxy-universe">GALAXY DRIFT</option>
+      <option value="deep-field">DEEP FIELD - ORIGINAL</option>
+    </select>
+    <button id="music-toggle" class="music-toggle" type="button" aria-pressed="true" aria-label="Turn music off">
+      ♫ MUSIC ON
+    </button>
+  </div>
+
+  <!-- ======= IN-GAME HUD ======= -->
+  <div id="hud" class="hidden">
+    <div id="hud-topleft" class="hud-panel rgb-border">
+      <div id="mission-title">MISSION</div>
+      <ul id="objectives"></ul>
+      <div id="hud-systems" class="hidden">
+        <div class="sys-title">BASE SYSTEMS</div>
+        <div class="sys-row"><span>PWR</span><div class="bar sm"><div id="sys-pwr"></div></div><b id="sys-pwr-txt">0/0</b></div>
+        <div class="sys-row"><span>H2O</span><div class="bar sm"><div id="sys-h2o"></div></div><b id="sys-h2o-txt">100%</b></div>
+        <div class="sys-row"><span>FOOD</span><div class="bar sm"><div id="sys-food"></div></div><b id="sys-food-txt">65%</b></div>
+        <div class="sys-row"><span>CREW</span><div class="bar sm"><div id="sys-crew"></div></div><b id="sys-crew-txt">100%</b></div>
+        <div id="sys-status">PWR: OFFLINE</div>
+        <div id="sys-warning" class="hidden">BROWNOUT</div>
+      </div>
+    </div>
+    <div id="hud-topcenter">
+      <canvas id="compass" width="360" height="34"></canvas>
+      <div id="event-banner" class="hidden"></div>
+    </div>
+    <div id="hud-bottomleft" class="hud-panel rgb-border">
+      <div class="vital">
+        <span>O2</span>
+        <div class="bar"><div id="o2fill"></div></div>
+      </div>
+      <div class="vital"><span>TIME</span><div id="timer">00:00</div></div>
+      <div class="vital"><span>POS</span><div id="coords">0.0 | 0.0</div></div>
+    </div>
+    <div id="hud-bottomright" class="hud-panel rgb-border">
+      <canvas id="minimap" width="170" height="170"></canvas>
+      <div id="speed">SPD 0.0 m/s</div>
+    </div>
+    <div id="crosshair"><span></span></div>
+    <div id="interact" class="hidden"></div>
+    <div id="toast" class="hidden"></div>
+    <div id="hint">WASD move &nbsp; MOUSE look &nbsp; E interact &nbsp; SHIFT run &nbsp; SPACE jump &nbsp; ESC pause</div>
+    <div id="touch-controls" class="hidden" aria-label="Touch controls">
+      <div id="touch-look" aria-label="Drag to look around">
+        <span class="touch-look-label">DRAG TO LOOK</span>
+      </div>
+      <div id="touch-stick" role="img" aria-label="Movement joystick: drag to move">
+        <span class="touch-stick-direction touch-stick-up" aria-hidden="true">▲</span>
+        <span class="touch-stick-direction touch-stick-right" aria-hidden="true">▶</span>
+        <span class="touch-stick-direction touch-stick-down" aria-hidden="true">▼</span>
+        <span class="touch-stick-direction touch-stick-left" aria-hidden="true">◀</span>
+        <span id="touch-stick-knob"></span>
+        <span class="touch-control-caption">MOVE</span>
+      </div>
+      <div id="touch-buttons">
+        <button class="touch-button touch-flight-only" data-touch-key="KeyX" aria-label="Brake">
+          <span class="touch-button-icon">X</span><span>BRAKE</span>
+        </button>
+        <button class="touch-button" data-touch-key="ShiftLeft" aria-label="Run or boost">
+          <span class="touch-button-icon">»</span><span class="touch-ground-only">SPRINT</span><span class="touch-flight-only">BOOST</span>
+        </button>
+        <button class="touch-button touch-flight-only" data-touch-key="KeyC" aria-label="Move down">
+          <span class="touch-button-icon">↓</span><span>DOWN</span>
+        </button>
+        <button class="touch-button" data-touch-key="Space" aria-label="Jump or move up">
+          <span class="touch-button-icon touch-ground-only">↑</span><span class="touch-button-icon touch-flight-only">↑</span>
+          <span class="touch-ground-only">JUMP</span><span class="touch-flight-only">UP</span>
+        </button>
+        <button class="touch-button touch-action" id="touch-interact" aria-label="Interact">
+          <span class="touch-button-icon">E</span><span>ACTION</span>
+        </button>
+        <button class="touch-button touch-pause" id="touch-pause" aria-label="Pause mission">Ⅱ <span>PAUSE</span></button>
+      </div>
+    </div>
+    <div id="vignette"></div>
+  </div>
+
+  <div id="boost" class="hidden"></div>
+
+  <!-- ======= COUNTDOWN ======= -->
+  <div id="countdown" class="hidden"><span id="countnum">5</span></div>
+
+  <section id="academy-intro" class="academy-intro" aria-labelledby="intro-title">
+    <div class="intro-stars" aria-hidden="true"></div>
+    <video class="intro-background-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+      <source src="../assets/academy-orientation.mp4?v=20261114" type="video/mp4" />
+    </video>
+    <div class="intro-content">
+      <div class="intro-welcome-row">
+        <img class="intro-logo" src="../assets/academy-logo.svg?v=astro-badge-2" alt="" />
+        <p class="welcome-glass"><span class="welcome-glass-dot" aria-hidden="true"></span><span>WELCOME, CADET</span></p>
+      </div>
+      <p class="intro-eyebrow">MINATO AMAMIYA PRESENTS</p>
+      <h1 id="intro-title">ASTRO TRAINER.<br /><span>MISSION READY.</span></h1>
+      <p class="intro-copy">
+        Train for life beyond Earth. Explore distant worlds, restore vital systems,
+        and bring your crew home safely.
+      </p>
+      <div class="intro-highlights" aria-label="Simulator features">
+        <span>EXPLORE</span><i aria-hidden="true"></i><span>REPAIR</span><i aria-hidden="true"></i><span>RESCUE</span>
+      </div>
+      <button id="intro-enter" class="btn rgb intro-enter" type="button">ENTER THE HANGAR <span aria-hidden="true">→</span></button>
+      <p class="intro-skip-hint">PRESS ENTER TO CONTINUE</p>
+    </div>
+    <div class="intro-version" aria-hidden="true">ACADEMY ORIENTATION <span>01</span></div>
+  </section>
+
+  <!-- ======= MAIN MENU ======= -->
+  <div id="menu" class="screen hidden">
+    <aside class="menu-sidebar" aria-label="Academy navigation">
+      <nav class="sidebar-rail" aria-label="Quick navigation">
+        <a class="sidebar-logo" href="#dashboard-overview" aria-label="Academy overview" title="Academy overview">
+          <img src="../assets/academy-logo.svg?v=astro-badge-2" alt="" />
+        </a>
+        <a class="sidebar-rail-link active" href="#dashboard-overview" aria-label="Overview" title="Overview">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 14v2m4-6v6m4-9v9"/></svg>
+        </a>
+        <a class="sidebar-rail-link" href="#single-player-title" aria-label="Missions" title="Missions">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3m0 12v3M3 12h3m12 0h3"/><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>
+        </a>
+        <a class="sidebar-rail-link" href="#team-missions-title" aria-label="Team missions" title="Team missions">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3.5 19c.5-3.1 2.4-4.7 5.5-4.7s5 1.6 5.5 4.7m1-4.4c2.8-.2 4.5 1.3 5 4.1"/></svg>
+        </a>
+        <span class="sidebar-rail-spacer"></span>
+        <button class="sidebar-rail-link" id="sidebar-guide-icon" type="button" aria-label="Core systems guide" title="Core systems guide">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5c3-1.2 5.7-.7 8 1.2 2.3-1.9 5-2.4 8-1.2v13c-3-1.2-5.7-.7-8 1.2-2.3-1.9-5-2.4-8-1.2v-13Z"/><path d="M12 7v12"/></svg>
+        </button>
+        <span class="sidebar-avatar" id="sidebar-avatar" aria-hidden="true">C</span>
+      </nav>
+      <div class="sidebar-panel">
+        <div class="sidebar-account">
+          <span id="sidebar-player">CADET</span>
+          <span class="sidebar-online" aria-label="Online"></span>
+        </div>
+        <nav class="sidebar-navigation" aria-label="Dashboard sections">
+          <a class="sidebar-nav-link active" href="#dashboard-overview"><span class="sidebar-nav-icon" aria-hidden="true">▦</span><span>Overview</span></a>
+          <a class="sidebar-nav-link" href="#single-player-title"><span class="sidebar-nav-icon" aria-hidden="true">◎</span><span>Missions</span></a>
+          <a class="sidebar-nav-link" href="#team-missions-title"><span class="sidebar-nav-icon" aria-hidden="true">♧</span><span>Team missions</span></a>
+          <button class="sidebar-nav-link" id="sidebar-guide-btn" type="button"><span class="sidebar-nav-icon" aria-hidden="true">▤</span><span>Core systems guide</span></button>
+        </nav>
+        <div class="sidebar-current-mission">
+          <div class="sidebar-current-label">CURRENT MISSION</div>
+          <p id="sidebar-mission" class="sidebar-mission">No mission selected</p>
+          <p id="sidebar-mission-world" class="sidebar-mission-world">Hangar</p>
+          <span id="sidebar-mission-status" class="sidebar-status">READY TO FLY</span>
+        </div>
+        <div class="sidebar-player-footer">
+          <span class="sidebar-avatar-small" id="sidebar-avatar-small" aria-hidden="true">C</span>
+          <span><small>PILOT</small><strong id="sidebar-footer-player">CADET</strong></span>
+        </div>
+      </div>
+    </aside>
+    <div class="menu-inner" id="dashboard-overview">
+      <div class="academy-brand">
+        <img src="../assets/academy-logo.svg?v=astro-badge-2" alt="" />
+        <span>MINATO AMAMIYA</span>
+      </div>
+      <p class="welcome-glass dashboard-welcome"><span class="welcome-glass-dot" aria-hidden="true"></span><span>WELCOME, CADET</span></p>
+      <h1 class="title">ASTRO <span>TRAINER</span></h1>
+      <p class="sub">Choose your mission, cadet. The academy is watching.</p>
+      <section class="mission-section" aria-labelledby="single-player-title">
+        <h2 id="single-player-title" tabindex="-1">SINGLE PLAYER</h2>
+        <p class="section-note">All 15 solo missions</p>
+        <div id="mission-cards" class="mission-grid"></div>
+      </section>
+      <section class="mission-section team-section" aria-labelledby="team-missions-title">
+        <h2 id="team-missions-title">TEAM MISSIONS</h2>
+        <p class="section-note">Co-op scenarios for 2-4 crew. Play solo or coordinate with your team.</p>
+        <div id="team-lobby" class="team-lobby">
+          <div id="team-connect-controls" class="team-connect-controls">
+            <label>
+              Pilot name
+              <input id="team-name" type="text" maxlength="20" autocomplete="nickname" placeholder="Your call sign" />
+            </label>
+            <button id="team-create-btn" class="btn rgb">CREATE TEAM</button>
+            <label>
+              Team code
+              <input id="team-code" type="text" maxlength="6" autocomplete="off" placeholder="6-character code" />
+            </label>
+            <button id="team-join-btn" class="btn ghost">JOIN TEAM</button>
+          </div>
+          <div id="team-room" class="team-room hidden">
+            <div class="team-room-heading">
+              <div>TEAM CODE <strong id="team-room-code"></strong></div>
+              <button id="team-leave-btn" class="btn ghost">LEAVE TEAM</button>
+            </div>
+            <p id="team-room-status" class="section-note"></p>
+            <ul id="team-roster"></ul>
+          </div>
+          <p id="team-error" class="team-error hidden" role="alert"></p>
+          <p class="team-connection-note">The host must share the room code and run the multiplayer server. For players outside the local network, deploy the server on a public HTTPS/WSS host.</p>
+        </div>
+        <div id="team-mission-cards" class="mission-grid"></div>
+      </section>
+      <button id="guide-btn" class="btn ghost">CORE SYSTEMS GUIDE</button>
+      <label class="graphics-setting" for="graphics-quality">
+        GRAPHICS
+        <select id="graphics-quality" aria-label="Graphics quality" aria-describedby="graphics-note">
+          <option value="low">LOW</option>
+          <option value="high">HIGH</option>
+          <option value="ultra">ULTRA</option>
+        </select>
+      </label>
+      <p id="graphics-note" class="graphics-note">ULTRA uses more power and may slow older devices.</p>
+      <p class="footer-note">Best experienced with keyboard + mouse &nbsp;|&nbsp; Headphones recommended</p>
+    </div>
+  </div>
+
+  <!-- ======= MISSION BRIEFING (cockpit) ======= -->
+  <div id="briefing" class="screen hidden">
+    <div class="briefing-panel rgb-border">
+      <div class="brief-badge" id="brief-badge">MOON</div>
+      <h2 id="brief-title">MISSION BRIEFING</h2>
+      <p id="brief-text"></p>
+      <ul id="brief-objectives"></ul>
+      <div class="brief-row" id="brief-env"></div>
+      <button id="launch-btn" class="btn rgb">LAUNCH&nbsp;&nbsp;[ENTER]</button>
+      <button id="brief-back" class="btn ghost">BACK TO HANGAR</button>
+    </div>
+  </div>
+
+  <!-- ======= PAUSE ======= -->
+  <div id="pause" class="screen hidden">
+    <div class="pause-panel rgb-border">
+      <h2>PAUSED</h2>
+      <button id="resume-btn" class="btn rgb">RESUME</button>
+      <button id="abort-btn" class="btn ghost">ABORT MISSION</button>
+    </div>
+  </div>
+
+  <!-- ======= MISSION COMPLETE ======= -->
+  <div id="complete" class="screen hidden">
+    <div class="complete-panel rgb-border">
+      <h2 id="complete-title">MISSION COMPLETE</h2>
+      <div id="stars" class="stars"></div>
+      <div id="stats"></div>
+      <div id="best"></div>
+      <button id="replay-btn" class="btn rgb">FLY AGAIN</button>
+      <button id="menu-btn" class="btn ghost">HANGAR</button>
+    </div>
+  </div>
+
+  <!-- ======= SYSTEM CHOICE MODAL ======= -->
+  <div id="choice" class="screen hidden">
+    <div class="choice-panel rgb-border">
+      <h2 id="choice-title">POWER GENERATION</h2>
+      <p id="choice-sub">Provides: Electricity</p>
+      <div class="choice-cards">
+        <div class="choice-card">
+          <h3 id="choice-a-title">SOLAR ARRAY</h3>
+          <p class="trade-label">TRADE-OFF</p>
+          <p id="choice-a-desc" class="trade"></p>
+          <button id="choice-a-btn" class="btn rgb">CHOOSE</button>
+        </div>
+        <div class="choice-card">
+          <h3 id="choice-b-title">NUCLEAR RTG</h3>
+          <p class="trade-label">TRADE-OFF</p>
+          <p id="choice-b-desc" class="trade"></p>
+          <button id="choice-b-btn" class="btn rgb">CHOOSE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= CORE SYSTEMS GUIDE ======= -->
+  <div id="guide" class="screen hidden">
+    <div class="guide-panel rgb-border">
+      <h2>CORE SYSTEMS &amp; TRADE-OFFS</h2>
+      <table id="guide-table">
+        <thead>
+          <tr><th>System</th><th>Provides</th><th>Trade-off</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Power Generation</td>
+            <td>Electricity</td>
+            <td>Solar is lightweight / inexpensive but can stop during Martian dust storms or the lunar night; nuclear power provides constant baseline power but costs more.</td>
+          </tr>
+          <tr>
+            <td>Life Support (ECLSS)</td>
+            <td>Oxygen &amp; clean water</td>
+            <td>Closed-loop recycling conserves supplies but requires continuous electrical power.</td>
+          </tr>
+          <tr>
+            <td>Radiation Shielding</td>
+            <td>Crew health &amp; safety</td>
+            <td>Regolith shielding provides protection but requires rover / equipment power; water walls can also shield but use drinking reserves.</td>
+          </tr>
+          <tr>
+            <td>Food Production</td>
+            <td>Food, morale &amp; oxygen</td>
+            <td>Hydroponics provides fresh food and oxygen but demands water and electricity.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="guide-tip">Try it live in the BASE CAMP ALPHA and POLAR BASE missions.</p>
+      <button id="guide-close" class="btn rgb">CLOSE</button>
+    </div>
+  </div>
+
+  <div id="fade"></div>
+</div>
+
+<script>
+  const dashboardVideo = document.getElementById('dashboard-video');
+  if (dashboardVideo) {
+    dashboardVideo.addEventListener('ended', () => {
+      dashboardVideo.currentTime = 0;
+      dashboardVideo.play().catch(() => {});
+    });
+    dashboardVideo.addEventListener('loadeddata', () => {
+      dashboardVideo.currentTime = 0;
+      dashboardVideo.play().catch(() => {});
+    });
+  }
+</script>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+<script type="module" src="../main.js?v=academy-intro-4"></script>
+</body>
+</html>

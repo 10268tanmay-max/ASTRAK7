@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Astro Trainer academy logo">
+  <defs>
+    <radialGradient id="background" cx="38%" cy="30%" r="76%">
+      <stop offset="0" stop-color="#153958"/>
+      <stop offset="1" stop-color="#050b1b"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#b8fbff"/>
+      <stop offset=".48" stop-color="#65e5ff"/>
+      <stop offset="1" stop-color="#8b8bff"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="0" x2=".8" y1="0" y2="1">
+      <stop offset="0" stop-color="#f4ffff"/>
+      <stop offset=".52" stop-color="#92f3ff"/>
+      <stop offset="1" stop-color="#70aaff"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="2.2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <circle cx="60" cy="60" r="54" fill="url(#background)" stroke="url(#rim)" stroke-width="3"/>
+  <circle cx="60" cy="60" r="47" fill="none" stroke="#bcefff" stroke-opacity=".16" stroke-width="1"/>
+
+  <path d="M17 70c9-22 31-37 56-37 12 0 23 3 32 9" fill="none" stroke="#9defff" stroke-opacity=".76" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M15 75c12 20 34 32 58 32 12 0 23-3 32-9" fill="none" stroke="#8bbdff" stroke-opacity=".42" stroke-width="1.5" stroke-linecap="round"/>
+
+  <path d="m60 25 27 61H73l-5-13H52l-5 13H33l27-61Zm0 18-5 18h10l-5-18Z" fill="url(#mark)" fill-rule="evenodd" filter="url(#glow)"/>
+  <path d="M39 62c13 8 29 9 44 2" fill="none" stroke="#ecfdff" stroke-opacity=".68" stroke-width="1.4" stroke-linecap="round"/>
+
+  <circle cx="20" cy="65" r="4" fill="#d9ffff" filter="url(#glow)"/>
+  <circle cx="101" cy="42" r="3" fill="#a9bbff"/>
+  <path d="m89 76 2.4 6.1 6.1 2.4-6.1 2.4-2.4 6.1-2.4-6.1-6.1-2.4 6.1-2.4 2.4-6.1Z" fill="#e7ffff"/>
+  <circle cx="35" cy="36" r="1.8" fill="#d3faff"/>
+</svg>
