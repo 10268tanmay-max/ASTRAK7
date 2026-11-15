@@ -209,11 +209,10 @@ function enterHangar() {
   if (enteringHangar) return;
   enteringHangar = true;
   if (musicEnabled) startGameMusic();
-  const hasCinematicSource = !!(introCinematic && (introCinematic.currentSrc || introCinematic.querySelector('source')?.src));
-  if (!hasCinematicSource) {
-    completeHangarEntry();
-    return;
-  }
+
+  academyIntro.classList.add('is-cinematic');
+  introCinematic.classList.add('is-playing');
+  introCinematic.currentTime = 0;
 
   let cinematicFinished = false;
   let cinematicFallback = null;
@@ -227,10 +226,6 @@ function enterHangar() {
     completeHangarEntry();
   };
 
-  academyIntro.classList.add('is-cinematic');
-  introCinematic.classList.add('is-playing');
-  introCinematic.currentTime = 0;
-
   introCinematic.play().catch(() => {
     endCinematic();
   });
@@ -240,10 +235,9 @@ function enterHangar() {
     return;
   }
 
-  cinematicFallback = setTimeout(endCinematic, 3000);
+  cinematicFallback = setTimeout(endCinematic, 4000);
   introCinematic.addEventListener('ended', endCinematic, { once: true });
 }
-
 $('intro-enter').addEventListener('click', enterHangar);
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Enter' && !academyIntro.classList.contains('hidden')) {
